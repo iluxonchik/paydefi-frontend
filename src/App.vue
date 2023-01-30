@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue';
+import Connect from "@/components/Connect.vue";
 
 
 const theme = ref('light');
@@ -36,9 +37,10 @@ function toggleTheme() {
               <v-divider></v-divider>
           </v-list>
 
-
       </v-navigation-drawer>
-      <v-main></v-main>
+      <v-main>
+        <Connect />
+      </v-main>
 
       <v-bottom-navigation>
           <v-btn value="send">
