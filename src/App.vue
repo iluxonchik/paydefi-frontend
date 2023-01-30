@@ -1,12 +1,31 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import Connect from "@/components/Connect.vue";
+import * as net from "net";
 
 
 const theme = ref('light');
+const connectedAccountAddr = ref(null);
+const connectedNetwork = ref(null);
+
+const accountName = computed(() => {
+    return connectedAccountAddr.value === null ? "No Account" : connectedAccountAddr.value;
+});
+
+const networkName = computed( () => {
+    return connectedNetwork.value === null ? "Disconnected ❌" : connectedNetwork.value + " ✅";
+});
 
 function toggleTheme() {
     theme.value = theme.value === 'light' ? 'dark' : 'light';
+}
+
+function handleWalletConnected(data) {
+    connectedAccountAddr.value = data.accounts[0];
+    data.web3.eth.net.getNetworkType().then((name) => {
+        name = name.toLowerCase();
+        connectedNetwork.value = name.charAt(0).toUpperCase() + name.slice(1);
+    });
 }
 
 </script>
@@ -30,8 +49,8 @@ function toggleTheme() {
           <v-list>
               <v-list-item
                   prepend-avatar="https://randomuser.me/api/portraits/women/85.jpg"
-                  title="0x1235234523461234"
-                  subtitle="Polygon Mainnet ✅"
+                  :title="accountName"
+                  :subtitle="networkName"
               >
               </v-list-item>
               <v-divider></v-divider>
@@ -39,7 +58,7 @@ function toggleTheme() {
 
       </v-navigation-drawer>
       <v-main>
-        <Connect />
+        <Connect v-if="connectedAccountAddr === null" @wallet-connected="handleWalletConnected"/>
       </v-main>
 
       <v-bottom-navigation>
