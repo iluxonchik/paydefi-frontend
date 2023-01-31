@@ -1,12 +1,19 @@
 <script setup>
 import { ref, computed } from 'vue';
 import Connect from "@/components/Connect.vue";
-import * as net from "net";
+import Send from "@/components/Send.vue";
+import Receive from "@/components/Receive.vue";
 
+const ActiveComponent = {
+    Connect: 0,
+    Send: 1,
+    Receive: 2,
+}
 
 const theme = ref('light');
 const connectedAccountAddr = ref(null);
 const connectedNetwork = ref(null);
+const selectedActiveComponent = ref(0);
 
 const accountName = computed(() => {
     return connectedAccountAddr.value === null ? "No Account" : connectedAccountAddr.value;
@@ -26,6 +33,20 @@ function handleWalletConnected(data) {
         name = name.toLowerCase();
         connectedNetwork.value = name.charAt(0).toUpperCase() + name.slice(1);
     });
+    selectedActiveComponent.value = ActiveComponent.Send;
+
+}
+
+function selectSendComponent() {
+    if (connectedAccountAddr !== null) {
+        selectedActiveComponent.value = ActiveComponent.Send;
+    }
+}
+
+function selectReceiveComponent() {
+    if (connectedAccountAddr !== null) {
+        selectedActiveComponent.value = ActiveComponent.Receive;
+    }
 }
 
 </script>
@@ -58,16 +79,24 @@ function handleWalletConnected(data) {
 
       </v-navigation-drawer>
       <v-main>
-        <Connect v-if="connectedAccountAddr === null" @wallet-connected="handleWalletConnected"/>
+          <v-container>
+              <v-row>
+                  <v-col cols="12">
+                      <Connect v-if="selectedActiveComponent === ActiveComponent.Connect" @wallet-connected="handleWalletConnected"/>
+                      <Send v-if="selectedActiveComponent === ActiveComponent.Send" />
+                      <Receive v-if="selectedActiveComponent === ActiveComponent.Receive" />
+                  </v-col>
+              </v-row>
+          </v-container>
       </v-main>
 
       <v-bottom-navigation>
-          <v-btn value="send">
+          <v-btn value="send" @click="selectSendComponent">
             <v-icon icon="mdi-bank-transfer-out"></v-icon>
               Send
           </v-btn>
 
-          <v-btn value="receive">
+          <v-btn value="receive" @click="selectReceiveComponent">
             <v-icon icon="mdi-bank-transfer-out"></v-icon>
               Receive
           </v-btn>
