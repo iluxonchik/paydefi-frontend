@@ -4,9 +4,6 @@ import {computed, watch, onMounted, ref} from "vue";
 
 const emit = defineEmits(['walletConnected']);
 
-
-
-const isConnectedToWeb3 = ref(false);
 const accounts = ref(null);
 watch(accounts, async (newValue, oldValue) => {
     if (newValue !== null) {
@@ -39,4 +36,5 @@ onMounted(() => {
 </script>
 <template>
     Requesting connection to your wallet...
+    Refresh the page to retry.
 </template>
