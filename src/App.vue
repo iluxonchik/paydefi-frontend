@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import {ref, computed, onMounted} from 'vue';
 import Connect from "@/components/Connect.vue";
 import Send from "@/components/Send.vue";
 import Receive from "@/components/Receive.vue";
@@ -11,6 +11,9 @@ const ActiveComponent = {
 }
 
 const theme = ref('light');
+const paymentRequestAddr = ref("0x2A8f490Be9a7CbbFA567727B81B968Ba8E1b6464");
+const paymentRequestAbi = ref(null);
+const web3 = ref(null);
 const connectedAccountAddr = ref(null);
 const connectedNetwork = ref(null);
 const selectedActiveComponent = ref(0);
@@ -28,13 +31,13 @@ function toggleTheme() {
 }
 
 function handleWalletConnected(data) {
+    web3.value = data.web3;
     connectedAccountAddr.value = data.accounts[0];
     data.web3.eth.net.getNetworkType().then((name) => {
         name = name.toLowerCase();
         connectedNetwork.value = name.charAt(0).toUpperCase() + name.slice(1);
     });
     selectedActiveComponent.value = ActiveComponent.Send;
-
 }
 
 function selectSendComponent() {
@@ -48,6 +51,14 @@ function selectReceiveComponent() {
         selectedActiveComponent.value = ActiveComponent.Receive;
     }
 }
+
+onMounted(() => {
+  fetch('/src/resources/payment_request_abi.json')
+      .then( (response) => response.json())
+      .then((json) => {
+            paymentRequestAbi.value = json.abi;
+      });
+});
 
 </script>
 
@@ -84,7 +95,13 @@ function selectReceiveComponent() {
                   <v-col cols="12">
                       <Connect v-if="selectedActiveComponent === ActiveComponent.Connect" @wallet-connected="handleWalletConnected"/>
                       <Send v-if="selectedActiveComponent === ActiveComponent.Send" />
-                      <Receive v-if="selectedActiveComponent === ActiveComponent.Receive" />
+                      <Receive v-if="selectedActiveComponent === ActiveComponent.Receive"
+                               @createPaymentRequest="handleCreatePaymentRequest"
+                               :web3="web3"
+                               :paymentRequestAddr="paymentRequestAddr"
+                               :payment-request-abi="paymentRequestAbi"
+                               :connected-account-addr="connectedAccountAddr"
+                      />
                   </v-col>
               </v-row>
           </v-container>
