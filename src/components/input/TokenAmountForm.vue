@@ -1,16 +1,55 @@
 <script setup>
-import {ref} from "vue";
+import {computed, onMounted, ref} from "vue";
 
-const emit = defineEmits(['tokenAdd']);
+const props = defineProps(["web3", "paymentRequestAddr", "paymentRequestAbi", "connectedAccountAddr"]);
+
+const web3 = ref(props.web3);
+const paymentRequestAddr = ref(props.paymentRequestAddr);
+const paymentRequestAbi = ref(props.paymentRequestAbi);
+const connectedAccountAddr = ref(props.connectedAccountAddr);
+const PaymentRequest = ref(null);
+
+const numPaymentRequestsCreated = ref(0);
+
+const addTokenBtnName = ref("addToken");
+const createPaymentRequestBtnName = ref("createPaymentRequest");
+
+const emit = defineEmits(['createPaymentRequest']);
 const tokenAddr = ref("0x");
 const tokenAmount = ref();
 const tokenAmounts = ref([]);
 
+const isCreateButtonDisabled = computed(
+    () => {
+       return tokenAmounts.value.length < 1;
+    }
+);
+
+function refreshNuberOfCreatedPaymentRequests() {
+    PaymentRequest.value = new web3.value.eth.Contract(paymentRequestAbi.value, paymentRequestAddr.value);
+    PaymentRequest.value.methods.balanceOf(connectedAccountAddr.value).call({from: connectedAccountAddr.value}).then( result => numPaymentRequestsCreated.value = parseInt(result));
+}
+
+onMounted( () => {
+   refreshNuberOfCreatedPaymentRequests();
+});
+
 function onAddTokenAmount(e) {
     // TODO: validate that token is a valid ERC-20 (in another part?)
-    tokenAmounts.value.push({addr: tokenAddr.value, amount: tokenAmount.value});
-    tokenAddr.value = "0x";
-    tokenAmount.value = null;
+    if (e.submitter.name === addTokenBtnName.value) {
+        tokenAmounts.value.push({addr: tokenAddr.value, amount: tokenAmount.value});
+        tokenAddr.value = "0x";
+        tokenAmount.value = null;
+    } else if (e.submitter.name === createPaymentRequestBtnName.value) {
+        let tokensArg = [];
+        tokenAmounts.value.forEach((value) => {
+            tokensArg.push([value.addr, value.amount]);
+        })
+        PaymentRequest.value.methods.createWithStaticTokenAmount(tokensArg, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000').send( {from: connectedAccountAddr.value}).then(result => refreshNuberOfCreatedPaymentRequests());
+        emit("createPaymentRequest", tokenAmounts);
+    }
+
+
 }
 </script>
 <template>
@@ -51,12 +90,21 @@ function onAddTokenAmount(e) {
                 <v-row>
                     <v-col cols="10" md="8"></v-col>
                     <v-col cols="1" align-self="end">
-                        <v-btn type="submit" color="green">
+                        <v-btn type="submit" color="green" :name="addTokenBtnName">
                             Add
                         </v-btn>
                     </v-col>
-
                 </v-row>
+
+                <v-row>
+                    <v-col md="9">
+                        <v-btn block type="submit" color="green" :name=createPaymentRequestBtnName :disabled="isCreateButtonDisabled">
+                            Create Request
+                        </v-btn>
+                    </v-col>
+                </v-row>
+                <p>Using Contract: {{ paymentRequestAddr }}</p>
+                <p>You have created {{ numPaymentRequestsCreated }} Payment Requests</p>
             </v-container>
     </v-form>
 </template>
