@@ -3,6 +3,7 @@ import {ref, computed, onMounted} from 'vue';
 import Connect from "@/components/Connect.vue";
 import Send from "@/components/Send.vue";
 import Receive from "@/components/Receive.vue";
+import PaymentRequestDetail from "@/components/view/PaymentRequestDetail.vue";
 
 const ActiveComponent = {
     Connect: 0,
@@ -94,7 +95,13 @@ onMounted(() => {
               <v-row>
                   <v-col cols="12">
                       <Connect v-if="selectedActiveComponent === ActiveComponent.Connect" @wallet-connected="handleWalletConnected"/>
-                      <Send v-if="selectedActiveComponent === ActiveComponent.Send" />
+<!--                      <Send v-if="selectedActiveComponent === ActiveComponent.Send" />-->
+                      <PaymentRequestDetail v-if="web3 !== null && paymentRequestAbi !==null"
+                               :paymentRequestId="1"
+                               :web3="web3"
+                               :paymentRequestAddr="paymentRequestAddr"
+                               :payment-request-abi="paymentRequestAbi"
+                               :connected-account-addr="connectedAccountAddr"></PaymentRequestDetail>
                       <Receive v-if="selectedActiveComponent === ActiveComponent.Receive"
                                @createPaymentRequest="handleCreatePaymentRequest"
                                :web3="web3"

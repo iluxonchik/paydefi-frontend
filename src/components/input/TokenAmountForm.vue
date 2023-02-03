@@ -25,13 +25,13 @@ const isCreateButtonDisabled = computed(
     }
 );
 
-function refreshNuberOfCreatedPaymentRequests() {
+function refreshNumberOfCreatedPaymentRequests() {
     PaymentRequest.value = new web3.value.eth.Contract(paymentRequestAbi.value, paymentRequestAddr.value);
     PaymentRequest.value.methods.balanceOf(connectedAccountAddr.value).call({from: connectedAccountAddr.value}).then( result => numPaymentRequestsCreated.value = parseInt(result));
 }
 
 onMounted( () => {
-   refreshNuberOfCreatedPaymentRequests();
+   refreshNumberOfCreatedPaymentRequests();
 });
 
 function onAddTokenAmount(e) {
@@ -45,7 +45,7 @@ function onAddTokenAmount(e) {
         tokenAmounts.value.forEach((value) => {
             tokensArg.push([value.addr, value.amount]);
         })
-        PaymentRequest.value.methods.createWithStaticTokenAmount(tokensArg, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000').send( {from: connectedAccountAddr.value}).then(result => refreshNuberOfCreatedPaymentRequests());
+        PaymentRequest.value.methods.createWithStaticTokenAmount(tokensArg, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000').send( {from: connectedAccountAddr.value}).then(result => refreshNumberOfCreatedPaymentRequests());
         emit("createPaymentRequest", tokenAmounts);
     }
 
