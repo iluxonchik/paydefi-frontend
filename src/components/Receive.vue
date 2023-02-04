@@ -1,6 +1,7 @@
 <script setup>
 import {ref} from "vue";
 const props = defineProps(["web3", "paymentRequestAddr", "paymentRequestAbi", "connectedAccountAddr"]);
+const emit = defineEmits(["createPaymentRequest"])
 import TokenAmountForm from "@/components/input/TokenAmountForm.vue";
 </script>
 

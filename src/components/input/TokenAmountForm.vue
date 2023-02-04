@@ -45,7 +45,11 @@ function onAddTokenAmount(e) {
         tokenAmounts.value.forEach((value) => {
             tokensArg.push([value.addr, value.amount]);
         })
-        PaymentRequest.value.methods.createWithStaticTokenAmount(tokensArg, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000').send( {from: connectedAccountAddr.value}).then(result => refreshNumberOfCreatedPaymentRequests());
+        debugger;
+        PaymentRequest.value.methods.createWithStaticTokenAmount(tokensArg, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000').send(
+            {from: connectedAccountAddr.value}).then(result => {
+            debugger;
+        });
         emit("createPaymentRequest", tokenAmounts);
     }
 

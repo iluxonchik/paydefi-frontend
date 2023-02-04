@@ -1,5 +1,5 @@
 <script setup>
-import {ref, computed, onMounted} from 'vue';
+import {ref, computed, onMounted, reactive} from 'vue';
 import Connect from "@/components/Connect.vue";
 import Send from "@/components/Send.vue";
 import Receive from "@/components/Receive.vue";
@@ -9,6 +9,7 @@ const ActiveComponent = {
     Connect: 0,
     Send: 1,
     Receive: 2,
+    PayementRequestDetail: 3,
 }
 
 const theme = ref('light');
@@ -18,6 +19,9 @@ const web3 = ref(null);
 const connectedAccountAddr = ref(null);
 const connectedNetwork = ref(null);
 const selectedActiveComponent = ref(0);
+const activePaymentRequestDetail = reactive({
+    paymentRequestId: null,
+})
 
 const accountName = computed(() => {
     return connectedAccountAddr.value === null ? "No Account" : connectedAccountAddr.value;
@@ -39,6 +43,11 @@ function handleWalletConnected(data) {
         connectedNetwork.value = name.charAt(0).toUpperCase() + name.slice(1);
     });
     selectedActiveComponent.value = ActiveComponent.Send;
+}
+
+function handleCreatePaymentRequest(data) {
+    activePaymentRequestDetail.paymentRequestId = data.createdPaymentRequestId;
+    selectedActiveComponent.value = ActiveComponent.PayementRequestDetail;
 }
 
 function selectSendComponent() {
@@ -95,13 +104,13 @@ onMounted(() => {
               <v-row>
                   <v-col cols="12">
                       <Connect v-if="selectedActiveComponent === ActiveComponent.Connect" @wallet-connected="handleWalletConnected"/>
-<!--                      <Send v-if="selectedActiveComponent === ActiveComponent.Send" />-->
-                      <PaymentRequestDetail v-if="web3 !== null && paymentRequestAbi !==null"
-                               :paymentRequestId="1"
+                      <Send v-if="selectedActiveComponent === ActiveComponent.Send" />
+                      <PaymentRequestDetail v-if="selectedActiveComponent === ActiveComponent.PayementRequestDetail"
+                               :paymentRequestId="activePaymentRequestDetail.paymentRequestId"
                                :web3="web3"
                                :paymentRequestAddr="paymentRequestAddr"
                                :payment-request-abi="paymentRequestAbi"
-                               :connected-account-addr="connectedAccountAddr"></PaymentRequestDetail>
+                               :connected-account-addr="connectedAccountAddr"/>
                       <Receive v-if="selectedActiveComponent === ActiveComponent.Receive"
                                @createPaymentRequest="handleCreatePaymentRequest"
                                :web3="web3"
