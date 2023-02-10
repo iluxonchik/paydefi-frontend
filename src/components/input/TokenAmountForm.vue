@@ -18,6 +18,7 @@ const emit = defineEmits(['createPaymentRequest']);
 const tokenAddr = ref("0x");
 const tokenAmount = ref();
 const tokenAmounts = ref([]);
+const overlay = ref(false);
 
 const isCreateButtonDisabled = computed(
     () => {
@@ -44,13 +45,24 @@ function onAddTokenAmount(e) {
         let tokensArg = [];
         tokenAmounts.value.forEach((value) => {
             tokensArg.push([value.addr, value.amount]);
-        })
-        debugger;
+        });
+        overlay.value = true;
+
+        PaymentRequest.value.events.Transfer(
+                            {filter: {from: '0x0000000000000000000000000000000000000000', to: connectedAccountAddr.value}}
+                        ).on("data", function(event) {
+                            console.log("Received data: ", event);
+                            overlay.value = false;
+                            emit("createPaymentRequest", {
+                                createdPaymentRequestId: event.returnValues.tokenId
+                            });
+                        });
+
         PaymentRequest.value.methods.createWithStaticTokenAmount(tokensArg, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000').send(
             {from: connectedAccountAddr.value}).then(result => {
-            debugger;
+                // TODO: error check
+            console.log(result);
         });
-        emit("createPaymentRequest", tokenAmounts);
     }
 
 
@@ -91,6 +103,16 @@ function onAddTokenAmount(e) {
             </v-row>
         </v-container>
             <v-container>
+                    <v-overlay
+                      :model-value="overlay"
+                      class="align-center justify-center">
+                      <v-progress-circular
+                        color="primary"
+                        indeterminate
+                        size="64"
+                      ></v-progress-circular>
+                        <p class="text-center">Please wait while your Payment Request is being created</p>
+                </v-overlay>
                 <v-row>
                     <v-col cols="10" md="8"></v-col>
                     <v-col cols="1" align-self="end">

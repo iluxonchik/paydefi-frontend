@@ -6,6 +6,11 @@ import TokenAmountForm from "@/components/input/TokenAmountForm.vue";
 </script>
 
 <template>
-<TokenAmountForm :web3="web3" :payment-request-addr="paymentRequestAddr" :payment-request-abi="paymentRequestAbi" :connected-account-addr="connectedAccountAddr">
+<TokenAmountForm :web3="web3"
+                 :payment-request-addr="paymentRequestAddr"
+                 :payment-request-abi="paymentRequestAbi"
+                 :connected-account-addr="connectedAccountAddr"
+                 @createPaymentRequest="$emit('createPaymentRequest', $event)"
+>
 </TokenAmountForm>
 </template>
