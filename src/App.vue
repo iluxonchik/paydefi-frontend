@@ -4,12 +4,14 @@ import Connect from "@/components/Connect.vue";
 import Send from "@/components/Send.vue";
 import Receive from "@/components/Receive.vue";
 import PaymentRequestDetail from "@/components/view/PaymentRequestDetail.vue";
+import PaymentTokenSelection from "@/components/PaymentTokenSelection.vue";
 
 const ActiveComponent = {
     Connect: 0,
     Send: 1,
     Receive: 2,
     PayementRequestDetail: 3,
+    TokenAmountSend: 4,
 }
 
 const theme = ref('light');
@@ -42,7 +44,8 @@ function handleWalletConnected(data) {
         name = name.toLowerCase();
         connectedNetwork.value = name.charAt(0).toUpperCase() + name.slice(1);
     });
-    selectedActiveComponent.value = ActiveComponent.Send;
+    //selectedActiveComponent.value = ActiveComponent.Send;
+    selectedActiveComponent.value = ActiveComponent.TokenAmountSend;
 }
 
 function handleCreatePaymentRequest(data) {
@@ -104,6 +107,13 @@ onMounted(() => {
               <v-row>
                   <v-col cols="12">
                       <Connect v-if="selectedActiveComponent === ActiveComponent.Connect" @wallet-connected="handleWalletConnected"/>
+                      <PaymentTokenSelection v-if="selectedActiveComponent === ActiveComponent.TokenAmountSend"
+                               :paymentRequestId="5"
+                               :web3="web3"
+                               :paymentRequestAddr="paymentRequestAddr"
+                               :paymentRequestAbi="paymentRequestAbi"
+                               :connected-account-addr="connectedAccountAddr"
+                      />
                       <Send v-if="selectedActiveComponent === ActiveComponent.Send" />
                       <PaymentRequestDetail v-if="selectedActiveComponent === ActiveComponent.PayementRequestDetail"
                                :paymentRequestId="activePaymentRequestDetail.paymentRequestId"
