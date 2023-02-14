@@ -22,6 +22,10 @@ const PaymentRequest = new web3.value.eth.Contract(
 );
 
 const selectedToken = ref(null);
+const payBtnName = ref("payBtn");
+const isPayBtnDisabled = computed(() => {
+    return false;
+});
 
 const acceptedTokenAmounts = ref([]);
 
@@ -57,18 +61,27 @@ onMounted( () => {
 
 <template>
     <VContainer>
-    <VSelect
-        v-model="selectedToken"
-        :items="tokenAmountsSelect"
-        item-title="title"
-        item-value="token"
-        :hint="`Actual Name For Token ${selectedToken}`"
-        label="Select Payment Token"
-        persistent-hint
-        >
-
-    </VSelect>
+        <VForm>
+            <VRow>
+                <VCol cols="12">
+                    <VSelect
+                        v-model="selectedToken"
+                        :items="tokenAmountsSelect"
+                        item-title="title"
+                        item-value="token"
+                        :hint="`Actual Name For Token ${selectedToken}`"
+                        label="Select Payment Token"
+                        persistent-hint
+                        >
+                    </VSelect>
+                </VCol>
+                <VCol cols="12">
+                    <VBtn block type="submit" color="green" :name="payBtnName" :disabled="isPayBtnDisabled">
+                        Pay
+                    </VBtn>
+                </VCol>
+            </VRow>
+        </VForm>
     </VContainer>
-
 
 </template>
