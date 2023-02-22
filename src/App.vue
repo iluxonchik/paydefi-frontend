@@ -109,7 +109,7 @@ onBeforeMount(async () => {
                   <v-col cols="12">
                       <Connect v-if="selectedActiveComponent === ActiveComponent.Connect" @wallet-connected="handleWalletConnected"/>
                       <PaymentTokenSelection v-if="selectedActiveComponent === ActiveComponent.TokenAmountSend"
-                               :paymentRequestId="5"
+                               :paymentRequestId="9"
                                :web3="web3"
                                :paymentRequestAddr="paymentRequestAddr"
                                :paymentRequestAbi="paymentRequestAbi"

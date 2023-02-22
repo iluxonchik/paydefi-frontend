@@ -90,21 +90,37 @@ async function loadErc20ContractAbiForAddr(contractAddr) {
 async function onSelectPaymentToken(e) {
     if (e.submitter.name === payBtnName.value) {
         const selectedTokenAddr = selectedToken.value;
-        const tokenAmount = acceptedTokenToTokenAmount[selectedTokenAddr];
+        const tokenAmount = acceptedTokenToTokenAmount.value[selectedTokenAddr];
         const erc20Contract = await loadErc20ContractAbiForAddr(selectedTokenAddr);
 
         erc20Contract.events.Approval(
             {filter: {address: connectedAccountAddr.value, spender: paymentRequestAddr.value }}
         ).on("data", function(event) {
-            console.log("Approval event received data: " + event)
+            console.log("Approval event received data: " + JSON.stringify(event));
         });
 
-        erc20Contract.methods.increaseAllowance(
+        // TODO: increaseAllowance() is non-standard. Adapt use of approve()
+        erc20Contract.methods.approve(
             paymentRequestAddr.value,
             tokenAmount
-        ).send({from: connectedAccountAddr.value}).then((result) => {
+        ).send(
+            {from: connectedAccountAddr.value}
+        ).then((result) => {
             // TODO: perform error checking
             console.log(result);
+            PaymentRequest.value.events.PaymentRequestPaid(
+                {filter: {paymentRequestId: paymentRequestId.value, token: selectedTokenAddr, payer: connectedAccountAddr}}
+            ).on("data", function (event){
+                // TODO: emit event to parent and display payment receipt
+                console.log("Payment Request Paid" + JSON.stringify(event));
+            })
+
+            PaymentRequest.value.methods.pay(props.paymentRequestId, selectedTokenAddr).send(
+                {from: connectedAccountAddr.value}
+            ).then((result) => {
+                console.log("Payment Request payment result: " + JSON.stringify(result));
+            })
+
         })
 
 
