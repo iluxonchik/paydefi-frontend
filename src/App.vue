@@ -1,5 +1,5 @@
 <script setup>
-import {ref, computed, onMounted, reactive} from 'vue';
+import {ref, computed, onMounted, reactive, onBeforeMount} from 'vue';
 import Connect from "@/components/Connect.vue";
 import Send from "@/components/Send.vue";
 import Receive from "@/components/Receive.vue";
@@ -65,12 +65,13 @@ function selectReceiveComponent() {
     }
 }
 
-onMounted(() => {
-  fetch('/src/resources/payment_request_abi.json')
-      .then( (response) => response.json())
-      .then((json) => {
-            paymentRequestAbi.value = json.abi;
-      });
+onBeforeMount(async () => {
+    // TODO: make async, through the use of a loading indicator
+    const response = await fetch('/src/resources/payment_request_abi.json');
+    const jsonResponse = await response.json();
+
+  paymentRequestAbi.value = jsonResponse.abi;
+  console.log("PR Abi: " + paymentRequestAbi.value);
 });
 
 </script>
