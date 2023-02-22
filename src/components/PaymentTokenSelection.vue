@@ -1,6 +1,7 @@
 <script setup>
 
-import {computed, onMounted, reactive, ref} from "vue";
+import {computed, onBeforeMount, onMounted, reactive, ref} from "vue";
+import * as events from "events";
 
 const props = defineProps([
     "paymentRequestId",
@@ -16,18 +17,31 @@ const paymentRequestId = ref(props.paymentRequestId);
 const paymentRequestAbi = ref(props.paymentRequestAbi);
 const connectedAccountAddr = ref(props.connectedAccountAddr);
 const isPaymentRequestStatic = ref(false);
-const PaymentRequest = new web3.value.eth.Contract(
-    paymentRequestAbi.value,
-    paymentRequestAddr.value,
-);
+const PaymentRequest = computed( () => {
+    if (paymentRequestAbi.value !== null) {
+       return new web3.value.eth.Contract(
+            props.paymentRequestAbi,
+            props.paymentRequestAddr
+       );
+    } else {
+        return null;
+    }
+
+
+});
 
 const selectedToken = ref(null);
 const payBtnName = ref("payBtn");
+const acceptedTokenAmounts = ref([]);
+const acceptedTokenToTokenAmount = computed( () => {
+        // https://stackoverflow.com/questions/11508463/javascript-set-object-key-by-variable
+        return acceptedTokenAmounts.value.reduce((tokenAmountDict, tokenElem) => Object.assign(tokenAmountDict, {[tokenElem.token]: tokenElem.tokenAmount}), {});
+});
+
 const isPayBtnDisabled = computed(() => {
     return false;
 });
 
-const acceptedTokenAmounts = ref([]);
 
 const tokenAmountsSelect = computed( () => {
     return acceptedTokenAmounts.value.map(
@@ -41,17 +55,63 @@ const tokenAmountsSelect = computed( () => {
 
 
 
-async function setIsPaymentRequestStatic() {
-    isPaymentRequestStatic.value = await PaymentRequest.methods.isTokenAmountStatic(paymentRequestId.value).call();
+function setIsPaymentRequestStatic() {
+    if (PaymentRequest.value !== null) {
+        console.log("not null lol");
+        PaymentRequest.value.methods.isTokenAmountStatic(paymentRequestId.value).call().then(
+            (resValue) => {
+                isPaymentRequestStatic.value = resValue;
+            }
+        );
+    }
 }
 
-async function getStaticTokenAddressAmounts() {
-    acceptedTokenAmounts.value = await PaymentRequest.methods.getStaticTokenAmountInfos(paymentRequestId.value).call();
+function getStaticTokenAddressAmounts() {
+    if (PaymentRequest.value !== null) {
+        PaymentRequest.value.methods.getStaticTokenAmountInfos(paymentRequestId.value).call().then(
+            (resValue) => {
+                acceptedTokenAmounts.value = resValue;
+            }
+        );
+    }
+}
+
+async function loadErc20ContractAbiForAddr(contractAddr) {
+    const response = await fetch('/src/resources/erc20_abi.json');
+    const jsonResponse = await response.json();
+
+    return new web3.value.eth.Contract(
+        jsonResponse,
+        contractAddr
+    );
 
 }
 
+async function onSelectPaymentToken(e) {
+    if (e.submitter.name === payBtnName.value) {
+        const selectedTokenAddr = selectedToken.value;
+        const tokenAmount = acceptedTokenToTokenAmount[selectedTokenAddr];
+        const erc20Contract = await loadErc20ContractAbiForAddr(selectedTokenAddr);
 
-onMounted( () => {
+        erc20Contract.events.Approval(
+            {filter: {address: connectedAccountAddr.value, spender: paymentRequestAddr.value }}
+        ).on("data", function(event) {
+            console.log("Approval event received data: " + event)
+        });
+
+        erc20Contract.methods.increaseAllowance(
+            paymentRequestAddr.value,
+            tokenAmount
+        ).send({from: connectedAccountAddr.value}).then((result) => {
+            // TODO: perform error checking
+            console.log(result);
+        })
+
+
+    }
+}
+
+onBeforeMount( () => {
     setIsPaymentRequestStatic();
     getStaticTokenAddressAmounts();
 
@@ -61,7 +121,7 @@ onMounted( () => {
 
 <template>
     <VContainer>
-        <VForm>
+        <VForm @submit.prevent="onSelectPaymentToken">
             <VRow>
                 <VCol cols="12">
                     <VSelect
