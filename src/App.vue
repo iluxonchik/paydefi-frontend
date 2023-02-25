@@ -10,7 +10,7 @@ const ActiveComponent = {
     Connect: 0,
     Send: 1,
     Receive: 2,
-    PayementRequestDetail: 3,
+    PaymentRequestDetail: 3,
     TokenAmountSend: 4,
 }
 
@@ -56,7 +56,7 @@ function handlePaymentRequestIdSelected(data) {
 
 function handleCreatePaymentRequest(data) {
     activePaymentRequestDetail.paymentRequestId = data.createdPaymentRequestId;
-    selectedActiveComponent.value = ActiveComponent.PayementRequestDetail;
+    selectedActiveComponent.value = ActiveComponent.PaymentRequestDetail;
 }
 
 function selectSendComponent() {
@@ -127,7 +127,7 @@ onBeforeMount(async () => {
                             @paymentRequestIdSelected="handlePaymentRequestIdSelected"
                       />
                       <PaymentRequestDetail
-                                v-if="selectedActiveComponent === ActiveComponent.PayementRequestDetail"
+                                v-if="selectedActiveComponent === ActiveComponent.PaymentRequestDetail"
                                :paymentRequestId="activePaymentRequestDetail.paymentRequestId"
                                :web3="web3"
                                :paymentRequestAddr="paymentRequestAddr"
