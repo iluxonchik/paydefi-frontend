@@ -37,4 +37,6 @@ onMounted(() => {
 <template>
     Requesting connection to your wallet...
     Refresh the page to retry.
+
+    TODO: Add selector for the network
 </template>

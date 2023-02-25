@@ -113,6 +113,7 @@ async function onSelectPaymentToken(e) {
             ).on("data", function (event){
                 // TODO: emit event to parent and display payment receipt
                 console.log("Payment Request Paid" + JSON.stringify(event));
+                console.log("Payment Request Receipt ID: ", event.returnValues.receiptId);
             })
 
             PaymentRequest.value.methods.pay(props.paymentRequestId, selectedTokenAddr).send(

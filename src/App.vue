@@ -5,6 +5,7 @@ import Send from "@/components/Send.vue";
 import Receive from "@/components/Receive.vue";
 import PaymentRequestDetail from "@/components/view/PaymentRequestDetail.vue";
 import PaymentTokenSelection from "@/components/PaymentTokenSelection.vue";
+import Receipt from "@/components/Receipt.vue";
 
 const ActiveComponent = {
     Connect: 0,
@@ -12,6 +13,7 @@ const ActiveComponent = {
     Receive: 2,
     PaymentRequestDetail: 3,
     TokenAmountSend: 4,
+    Receipt: 5,
 }
 
 const theme = ref('light');
@@ -22,6 +24,7 @@ const connectedAccountAddr = ref(null);
 const connectedNetwork = ref(null);
 const selectedActiveComponent = ref(0);
 const selectedPaymentRequestIdForPayment = ref(null);
+const receiptAddr = ref(null);
 const activePaymentRequestDetail = reactive({
     paymentRequestId: null,
 })
@@ -44,8 +47,19 @@ function handleWalletConnected(data) {
     data.web3.eth.net.getNetworkType().then((name) => {
         name = name.toLowerCase();
         connectedNetwork.value = name.charAt(0).toUpperCase() + name.slice(1);
+
+        getPaymentRequestContract().then(
+            (paymentRequestContract) => {
+                paymentRequestContract.methods.receipt().call(
+                    {from: connectedAccountAddr.value}
+                ).then(result => {
+                    receiptAddr.value = result;
+                    selectedActiveComponent.value = ActiveComponent.Receipt;
+                    //selectedActiveComponent.value = ActiveComponent.Send;
+                });
+            }
+        )
     });
-    selectedActiveComponent.value = ActiveComponent.Send;
 }
 
 function handlePaymentRequestIdSelected(data) {
@@ -71,10 +85,22 @@ function selectReceiveComponent() {
     }
 }
 
+async function getPaymentRequestAbi() {
+    const response = await fetch('/src/resources/payment_request_abi.json');
+    return await response.json();
+}
+
+async function getPaymentRequestContract() {
+    const paymentRequestAbi = await getPaymentRequestAbi();
+    return new web3.value.eth.Contract(
+        paymentRequestAbi.abi,
+        paymentRequestAddr.value,
+    )
+}
+
 onBeforeMount(async () => {
     // TODO: make async, through the use of a loading indicator
-    const response = await fetch('/src/resources/payment_request_abi.json');
-    const jsonResponse = await response.json();
+    const jsonResponse = await getPaymentRequestAbi()
 
   paymentRequestAbi.value = jsonResponse.abi;
   console.log("PR Abi: " + paymentRequestAbi.value);
@@ -89,7 +115,7 @@ onBeforeMount(async () => {
           rounded
           title="PayDeFi - Send & Receive Money"
         >
-            <v-spacer></v-spacer>
+          <v-spacer></v-spacer>
             <v-btn @click="toggleTheme">{{ theme == 'light' ? '🌙' : '☀️' }}</v-btn>
         </v-app-bar>
 
@@ -114,6 +140,13 @@ onBeforeMount(async () => {
               <v-row>
                   <v-col cols="12">
                       <Connect v-if="selectedActiveComponent === ActiveComponent.Connect" @wallet-connected="handleWalletConnected"/>
+                      <Receipt v-if="selectedActiveComponent === ActiveComponent.Receipt"
+                               :web3="web3"
+                               :connectedAccountAddr="connectedAccountAddr"
+                               :receiptAddr="receiptAddr"
+                               :receiptId="4"
+
+                      />
                       <PaymentTokenSelection
                                 v-if="selectedActiveComponent === ActiveComponent.TokenAmountSend"
                                :paymentRequestId="selectedPaymentRequestIdForPayment"
@@ -153,7 +186,7 @@ onBeforeMount(async () => {
           </v-btn>
 
           <v-btn value="receive" @click="selectReceiveComponent">
-            <v-icon icon="mdi-bank-transfer-out"></v-icon>
+            <v-icon icon="mdi-bank-transfer-in"></v-icon>
               Receive
           </v-btn>
       </v-bottom-navigation>
